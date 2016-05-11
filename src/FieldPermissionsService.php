@@ -91,7 +91,7 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function permissions() {
+  public static function permissions() {
     $permissions = [];
     $instances = \Drupal::entityTypeManager()->getStorage('field_storage_config')->loadMultiple();
     foreach ($instances as $key => $instance) {
