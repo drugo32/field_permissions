@@ -6,6 +6,9 @@
  */
 
 namespace Drupal\field_permissions;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\comment\CommentManagerInterface;
 
 /**
  * Implement FieldPermission Interface.
@@ -20,7 +23,7 @@ interface FieldPermissionsServiceInterface {
    *   names. Usually this will be derived from one or more of the field
    *   instance labels.
    */
-  public static function getList($field_label = '');
+  public  function getList($field_label = '');
 
   /**
    * Returns field permissions in format suitable for use in hook_permission.
@@ -31,18 +34,18 @@ interface FieldPermissionsServiceInterface {
    * @return array
    *   An array of permission information,
    */
-  public static function listFieldPermissionSupport($field, $label = '');
+  public  function listFieldPermissionSupport($field, $label = '');
 
   /**
    * Get default value for checkbox role permission.
    */
-  public static function getPermissionValue();
+  public  function getPermissionValue();
 
 
   /**
    * Returns permissions implements in field_permissions.
    */
-  public static function permissions();
+  public  function permissions();
 
   /**
    * Get default value for checkbox  role permission.
@@ -50,7 +53,7 @@ interface FieldPermissionsServiceInterface {
    * @param \Drupal\field\FieldStorageConfigInterface $field
    *   The field to return permissions for.
    */
-  public static function fieldGetPermissionType($field);
+  public  function fieldGetPermissionType($field);
 
   /**
    * Get default value for checkbox  role permission.
@@ -58,7 +61,7 @@ interface FieldPermissionsServiceInterface {
    * @param \Drupal\field\FieldStorageConfigInterface $field
    *   The field to return permissions for.
    */
-  public static function fieldSetPermissionType($field, $type_permission);
+  public  function fieldSetPermissionType($field, $type_permission);
 
   /**
    * Field is attached to comment entity.
@@ -69,7 +72,7 @@ interface FieldPermissionsServiceInterface {
    * @return bool
    *   TRUE if in a comment entity.
    */
-  public static function fieldIsCommentField($field_definition);
+  public  function fieldIsCommentField($field_definition);
 
   /**
    * Get access for field by operations and account permisisons.
@@ -83,7 +86,7 @@ interface FieldPermissionsServiceInterface {
    * @param FieldDefinitionInterface $field_definition
    *   Fields to get permissions.
    */
-  public static function getFieldAccess($operation, $items, $account, $field_definition);
+  public  function getFieldAccess($operation, $items, $account, $field_definition);
 
   /**
    * Access to field on itemes and opertations whith FIELD_PERMISSIONS_PRIVATE.
@@ -100,7 +103,7 @@ interface FieldPermissionsServiceInterface {
    * @return bool
    *   Check permission.
    */
-  public static function getFieldAccessPrivate($operation, $items, $account, $field_name);
+  public  function getFieldAccessPrivate($operation, $items, $account, $field_name);
 
   /**
    * Access to field on itemes VIEW and FIELD_PERMISSIONS_PRIVATE.
@@ -115,7 +118,7 @@ interface FieldPermissionsServiceInterface {
    * @return bool
    *   Check permission.
    */
-  public static function getFieldAccessPrivateView($items, $account, $field_name);
+  public  function getFieldAccessPrivateView($items, $account, $field_name);
 
   /**
    * Access to field on itemes EDIT and FIELD_PERMISSIONS_PRIVATE.
@@ -130,7 +133,7 @@ interface FieldPermissionsServiceInterface {
    * @return bool
    *   Check permission.
    */
-  public static function getFieldAccessPrivateEdit($items, $account, $field_name);
+  public  function getFieldAccessPrivateEdit($items, $account, $field_name);
   /**
    * Access to field on itemes and opertations whith FIELD_PERMISSIONS_CUSTOM.
    *
@@ -146,7 +149,7 @@ interface FieldPermissionsServiceInterface {
    * @return bool
    *   Check permission.
    */
-  public static function getFieldAccessCustom($operation, $items, $account, $field_name);
+  public  function getFieldAccessCustom($operation, $items, $account, $field_name);
 
   /**
    * Access to field on itemes VIEW and FIELD_PERMISSIONS_CUSTOM.
@@ -161,7 +164,7 @@ interface FieldPermissionsServiceInterface {
    * @return bool
    *   Check permission.
    */
-  public static function getFieldAccessCustomView($items, $account, $field_name);
+  public  function getFieldAccessCustomView($items, $account, $field_name);
 
   /**
    * Access to field on itemes EDIT and FIELD_PERMISSIONS_CUSTOM.
@@ -176,6 +179,6 @@ interface FieldPermissionsServiceInterface {
    * @return bool
    *   Check permission.
    */
-  public static function getFieldAccessCustomEdit($items, $account, $field_name);
+  public  function getFieldAccessCustomEdit($items, $account, $field_name);
 
 }

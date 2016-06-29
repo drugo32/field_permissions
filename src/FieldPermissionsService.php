@@ -6,11 +6,29 @@
  */
 
 namespace Drupal\field_permissions;
-
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\comment\CommentManagerInterface;
 /**
  * Implemenst FieldPermissionsServiceInterfaces.
  */
 class FieldPermissionsService implements FieldPermissionsServiceInterface {
+  protected $entityManager;
+  protected $configManager;
+  protected $commentManager;
+
+  public function __construct(EntityTypeManagerInterface $entity_manager, ConfigFactoryInterface $config_manager, CommentManagerInterface $comment_manager) {
+    $this->entityManager = $entity_manager;
+    $this->commentManager = $comment_manager;
+    $this->configManager = $config_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+  public static function create(ContainerInterface $container) {
+    return new static($container->get('entity.manager'), $container->get('config.factory'), $container->get('comment.manager'));
+  }
+  */
 
   /**
    * Obtain the list of field permissions.
@@ -20,7 +38,7 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    *   names. Usually this will be derived from one or more of the field
    *   instance labels.
    */
-  public static function getList($field_label = '') {
+  public  function getList($field_label = '') {
     return array(
       'create' => array(
         'label' => t('Create field'),
@@ -58,9 +76,9 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    * @return array
    *   Return arry for permission ti singol field.
    */
-  public static function listFieldPermissionSupport($field, $label = '') {
+  public function listFieldPermissionSupport($field, $label = '') {
     $permissions = array();
-    $permission_list = FieldPermissionsService::getList($label);
+    $permission_list = $this->getList($label);
     foreach ($permission_list as $permission_type => $permission_info) {
       $permission = str_replace(' ', '_', $permission_type) . '_' . $field->getName();
       $permissions[$permission] = array(
@@ -74,10 +92,10 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
   /**
    * Get All permission Value for all field and all roles.
    */
-  public static function getPermissionValue() {
+  public function getPermissionValue() {
     $roules = user_roles();
     $field_field_permissions = [];
-    $field_permission_perm = FieldPermissionsService::permissions();
+    $field_permission_perm = $this->permissions();
     $permissions = user_role_permissions(array());
     foreach ($roules as $rule_name => $roule) {
       $roule_perms = $roule->getPermissions();
@@ -105,15 +123,15 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    * @return array
    *   Add custom permissions.
    */
-  public static function permissions() {
+  public function permissions() {
     $permissions = [];
-    $instances = \Drupal::entityTypeManager()->getStorage('field_storage_config')->loadMultiple();
+    $instances = $this->entityManager->getStorage('field_storage_config')->loadMultiple();
     foreach ($instances as $key => $instance) {
       $field_name = $instance->getName();
       // Check if permissionType is not default, before creating permissions.
-      $type = FieldPermissionsService::fieldGetPermissionType($instance);
+      $type = $this->fieldGetPermissionType($instance);
       if ($type <> FIELD_PERMISSIONS_PUBLIC) {
-        $permission_list = FieldPermissionsService::getList($field_name);
+        $permission_list = $this->getList($field_name);
         $perms_name = array_keys($permission_list);
         foreach ($perms_name as $perm_name) {
           $name = str_replace(' ', '_', $perm_name) . '_' . $field_name;
@@ -133,16 +151,16 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    * @return int
    *   return PUBLIC || PRIVATE || CUSTOM
    */
-  public static function fieldGetPermissionType($field) {
-    $config = \Drupal::service('config.factory')->getEditable('field_permissions.settings');
+  public function fieldGetPermissionType($field) {
+    $config = $this->configManager->getEditable('field_permissions.settings');
     $settings_name = 'type.field:' . $field->getName();
     $field_settings_perm = $config->get($settings_name);
     return ($field_settings_perm) ? $field_settings_perm : FIELD_PERMISSIONS_PUBLIC;
   }
 
-  public static function fieldSetPermissionType($field, $type_permission) {
+  public function fieldSetPermissionType($field, $type_permission) {
     $field_name = $field->getName();
-    $config = \Drupal::service('config.factory')->getEditable('field_permissions.settings');
+    $config = $this->configManager->getEditable('field_permissions.settings');
     $config->set('type.field:' . $field_name, $type_permission);
     $config->save();
   }
@@ -156,7 +174,7 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    * @return bool
    *   Garant or negate access.
    */
-  public static function GetAccessAdminFieldPermissions($account) {
+  public function GetAccessAdminFieldPermissions($account) {
     return $account->hasPermission("admin_field_permissions");
   }
 
@@ -169,7 +187,7 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    * @return bool
    *   Garant or negate access.
    */
-  public static function GetAccessPrivateFieldPermissions($account) {
+  public function GetAccessPrivateFieldPermissions($account) {
     return $account->hasPermission("access_user_private_field");
   }
 
@@ -182,9 +200,9 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    * @return bool
    *   TRUE if in a comment entity.
    */
-  public static function FieldIsCommentField($field_definition) {
+  public function FieldIsCommentField($field_definition) {
     $field_name = $field_definition->getName();
-    $field_names = \Drupal::service('comment.manager')->getFields('node');
+    $field_names = $this->commentManager->getFields('node');
     // Comment field.
     if (in_array($field_name, array_keys($field_names))) {
       return TRUE;
@@ -204,13 +222,13 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    * @param FieldDefinitionInterface $field_definition
    *   Fields to get permissions.
    */
-  public static function getFieldAccess($operation, $items, $account, $field_definition) {
-    $default_type = FieldPermissionsService::fieldGetPermissionType($field_definition);
+  public function getFieldAccess($operation, $items, $account, $field_definition) {
+    $default_type = $this->fieldGetPermissionType($field_definition);
     if (in_array("administrator", $account->getRoles()) || $default_type == FIELD_PERMISSIONS_PUBLIC) {
       return TRUE;
     }
     // Field add to comment entity.
-    if (FieldPermissionsService::FieldIsCommentField($field_definition)) {
+    if ($this->FieldIsCommentField($field_definition)) {
       return TRUE;
     }
     // NO impement metod getOwnerId || entity not user or field_collection.
@@ -222,10 +240,10 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
       return TRUE;
     }
     if ($default_type == FIELD_PERMISSIONS_PRIVATE) {
-      return FieldPermissionsService::getFieldAccessPrivate($operation, $entity, $account, $field_name);
+      return $this->getFieldAccessPrivate($operation, $entity, $account, $field_name);
     }
     if ($default_type == FIELD_PERMISSIONS_CUSTOM) {
-      return FieldPermissionsService::getFieldAccessCustom($operation, $entity, $account, $field_name);
+      return $this->getFieldAccessCustom($operation, $entity, $account, $field_name);
     }
   }
 
@@ -244,15 +262,15 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    * @return bool
    *   Check permission.
    */
-  public static function getFieldAccessPrivate($operation, $entity, $account, $field_name) {
-    if (FieldPermissionsService::GetAccessPrivateFieldPermissions($account)) {
+  public function getFieldAccessPrivate($operation, $entity, $account, $field_name) {
+    if ($this->GetAccessPrivateFieldPermissions($account)) {
       return TRUE;
     }
     if ($operation === "view") {
-      return FieldPermissionsService::getFieldAccessPrivateView($entity, $account, $field_name);
+      return $this->getFieldAccessPrivateView($entity, $account, $field_name);
     }
     elseif ($operation === "edit") {
-      return FieldPermissionsService::getFieldAccessPrivateEdit($entity, $account, $field_name);
+      return $this->getFieldAccessPrivateEdit($entity, $account, $field_name);
     }
   }
 
@@ -271,12 +289,12 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    * @return bool
    *   Check permission.
    */
-  public static function getFieldAccessCustom($operation, $entity, $account, $field_name) {
+  public function getFieldAccessCustom($operation, $entity, $account, $field_name) {
     if ($operation === "view") {
-      return FieldPermissionsService::getFieldAccessCustomView($entity, $account, $field_name);
+      return $this->getFieldAccessCustomView($entity, $account, $field_name);
     }
     elseif ($operation === "edit") {
-      return FieldPermissionsService::getFieldAccessCustomEdit($entity, $account, $field_name);
+      return $this->getFieldAccessCustomEdit($entity, $account, $field_name);
     }
   }
 
@@ -293,7 +311,7 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    * @return bool
    *   Check permission.
    */
-  public static function getFieldAccessPrivateView($entity, $account, $field_name) {
+  public function getFieldAccessPrivateView($entity, $account, $field_name) {
     // USER.
     if ($entity->getEntityTypeId() == 'user') {
       return $entity->id() == $account->id();
@@ -319,7 +337,7 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    * @return bool
    *   Check permission.
    */
-  public static function getFieldAccessPrivateEdit($entity, $account, $field_name) {
+  public function getFieldAccessPrivateEdit($entity, $account, $field_name) {
     if ($entity->isNew()) {
       return TRUE;
     }
@@ -349,7 +367,7 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    * @return bool
    *   Check permission.
    */
-  public static function getFieldAccessCustomView($entity, $account, $field_name) {
+  public function getFieldAccessCustomView($entity, $account, $field_name) {
     if ($account->hasPermission("view_" . $field_name)) {
       return $account->hasPermission("view_" . $field_name);
     }
@@ -381,7 +399,7 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
    * @return bool
    *   Check permission.
    */
-  public static function getFieldAccessCustomEdit($entity, $account, $field_name) {
+  public function getFieldAccessCustomEdit($entity, $account, $field_name) {
     if ($entity->isNew()) {
       return $account->hasPermission("create_" . $field_name);
     }
