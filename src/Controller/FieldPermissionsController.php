@@ -6,10 +6,11 @@
  */
 
 namespace Drupal\field_permissions\Controller;
-use Drupal\Core\Controller\ControllerBase;
+use \Drupal\Core\Controller\ControllerBase;
 use \Drupal\field\Entity\FieldStorageConfig;
-use Drupal\field_permissions\FieldPermissionsService;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use \Drupal\Core\Entity\EntityTypeManagerInterface;
+use \Drupal\field_permissions\FieldPermissionsService;
+use \Symfony\Component\DependencyInjection\ContainerInterface;
 
 
 /**
@@ -18,6 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class FieldPermissionsController extends ControllerBase {
 
   protected $fieldPermissions;
+  protected $entityManager;
 
   /**
    * Costructor.
@@ -25,24 +27,21 @@ class FieldPermissionsController extends ControllerBase {
    * @param FieldPermissionsService $field_permissions_service
    *   Field permissions services.
    */
-   /*
-  public function __construct(FieldPermissionsService $field_permissions_service) {
+  public function __construct(FieldPermissionsService $field_permissions_service, EntityTypeManagerInterface $entity_manager) {
     $this->fieldPermissions = $field_permissions_service;
-  }*/
+    $this->entityManager = $entity_manager;
+  }
 
   /**
    * {@inheritdoc}
    *
    * Uses late static binding to create an instance of this class with
    * injected dependencies.
-
+   */
   public static function create(ContainerInterface $container) {
     //return \Drupal::service("field_permissions.permissions_service");
-    return new static(
-      $container->get('field_permissions.permissions_service')
-    );
+    return new static($container->get('field_permissions.permissions_service'), $container->get('entity_type.manager'));
   }
-  */
 
   /**
    * Content to page report all field permissions settings.
@@ -50,15 +49,6 @@ class FieldPermissionsController extends ControllerBase {
    * Build table to Path: 'admin/reports/fields/permissions'.
    */
   public function content() {
-    // return "aaaa";
-    $build['table'] = array(
-      '#type' => 'table',
-      '#header' => array("aaa"),
-      '#title' => "Title", // $this->getTitle(),
-      '#rows' => array("sss"),
-    );
-    return $build;
-/*
     $build['table'] = array(
       '#type' => 'table',
       '#header' => $this->buildHeader(),
@@ -66,13 +56,11 @@ class FieldPermissionsController extends ControllerBase {
       '#rows' => $this->buildRows(),
     );
     return $build;
-*/
   }
 
   /**
    * Builed header tabel to content.
    */
-   /*
   public function buildHeader() {
     $headers = array(
       t('Field name'),
@@ -85,7 +73,7 @@ class FieldPermissionsController extends ControllerBase {
       $headers[] = array('data' => $permission_info['label'], 'class' => 'field-permissions-header');
     }
     return $headers;
-  }*/
+  }
 
   /**
    * {@inheritdoc}
@@ -99,16 +87,14 @@ class FieldPermissionsController extends ControllerBase {
    *
    * @var $instance \Drupal\field\Entity\FieldStorageConfig
    */
-   /*
   protected function buildRows() {
-    $instances = \Drupal::entityTypeManager()->getStorage('field_storage_config')->loadMultiple();
+    $instances = $this->entityManager->getStorage('field_storage_config')->loadMultiple();
     $rows = [];
     foreach ($instances as $key => $instance) {
       $rows[] = $this->buildRow($instance);
     }
     return $rows;
   }
-  */
 
   /**
    * Build single row to content.
@@ -119,7 +105,6 @@ class FieldPermissionsController extends ControllerBase {
    * @return array
    *   Build row.
    */
-   /*
   protected function buildRow(FieldStorageConfig $field_storage) {
     $row = [];
     if ($field_storage->isLocked()) {
@@ -147,6 +132,6 @@ class FieldPermissionsController extends ControllerBase {
       $row[4]['colspan'] = 5;
     }
     return $row;
-  }*/
+  }
 
 }

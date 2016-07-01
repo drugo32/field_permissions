@@ -24,13 +24,6 @@ class FieldPermissionsService implements FieldPermissionsServiceInterface {
   }
 
   /**
-   * {@inheritdoc}
-  public static function create(ContainerInterface $container) {
-    return new static($container->get('entity.manager'), $container->get('config.factory'), $container->get('comment.manager'));
-  }
-  */
-
-  /**
    * Obtain the list of field permissions.
    *
    * @param string $field_label

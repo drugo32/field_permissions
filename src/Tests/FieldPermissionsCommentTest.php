@@ -6,6 +6,7 @@
 
 namespace Drupal\field_permissions\Tests;
 use Drupal\field\Entity\FieldStorageConfig;
+use Symfony\Component\DependencyInjection\Container;
 
 
 /**
@@ -130,7 +131,7 @@ class FieldPermissionsCommentTest extends FieldPermissionsTestBase {
   /**
    * Test chanege parmission field enable perm by rule.
    */
-  private function fieldChangePermissionCommentField($perm = FIELD_PERMISSIONS_PUBLIC, $custom_permission = array(), $path = '') {
+  private function TestfieldChangePermissionCommentField($perm = FIELD_PERMISSIONS_PUBLIC, $custom_permission = array(), $path = '') {
 
     $this->drupalGet($path);
     if ($perm == FIELD_PERMISSIONS_PUBLIC || $perm == FIELD_PERMISSIONS_PRIVATE) {

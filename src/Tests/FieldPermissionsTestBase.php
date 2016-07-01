@@ -1,16 +1,17 @@
 <?php
 /**
  * @file
- * Contains FieldPermissionsTest.php
+ *  Contains FieldPermissionsTest.php
  */
 
 namespace Drupal\field_permissions\Tests;
 
-use Drupal\field\Tests\FieldUnitTestBase;
-use Drupal\field_permissions\FieldPermissionsService;
+
 use Drupal\simpletest\WebTestBase;
+use Drupal\field_permissions\FieldPermissionsService;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
 
 /**
  * Indicates that a field does not have any access control.
@@ -78,7 +79,7 @@ define('FIELD_PERMISSIONS_CUSTOM', 2);
    *
    * @var array
    */
-  public static $modules = ['node', 'field', 'comment', 'field_ui', 'user', 'field_permissions'];
+  public static $modules = ['comment', 'node', 'field', 'field_ui', 'user', 'field_permissions'];
 
   /**
    * Simpletest's setUp().
@@ -140,12 +141,7 @@ define('FIELD_PERMISSIONS_CUSTOM', 2);
 
   }
 
-  /**
-   * {@inheritdoc}
-  protected function getModule() {
-    return 'field_permission';
-  }
-  */
+
   /**
    * Test Send form permission page width enable permission by rules.
    */
@@ -165,7 +161,8 @@ define('FIELD_PERMISSIONS_CUSTOM', 2);
    */
   function TestGetCustomPemrission($role, $field_perm = array()) {
     $custom_perm = array();
-    $permission_list = FieldPermissionsService::permissions();
+    $permission_list = \Drupal::service("field_permissions.permissions_service")->permissions();
+    // $permission_list = Drupal::service("field_permissions.permissions_service")->permissions();
     $permission_list = array_keys($permission_list);
     $permission_role = array_keys(user_roles());
     $remove_perm = array();
